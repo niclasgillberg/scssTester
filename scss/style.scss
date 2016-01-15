@@ -1,0 +1,210 @@
+$root-font-size: 12;
+
+@function buildGridSelectors($span, $total, $selector) {
+    $buildSelector: "";
+  $calcTotal: $total / $span;
+  $i: 1;
+
+  @while $calcTotal < $total {
+    $shouldRecurse: ($calcTotal == floor($calcTotal) and $calcTotal >= 1 and $i == floor($i) and $i >= 1);
+
+    @if $shouldRecurse {
+        $buildSelector: buildGridSelectors($i, $calcTotal, $selector);
+    }
+
+    $i: $i + 1;
+    $calcTotal: $calcTotal + ($total / $span);
+  }
+  $selectors: ".#{$selector}-#{$span}-#{$total}";
+  @if $selectors != "" {
+    $selectors: $selectors + ", " + $buildSelector;
+  }
+
+  @return $selectors;
+}
+
+@function calculateColumnWidth($span, $total-columns) {
+    @return ((100% / $total-columns) * $span);
+}
+
+%baseColumn {
+    box-sizing: border-box !important;
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: top;
+    font-size: $root-font-size;
+
+    .grid,
+    .grid-padded {
+        font-size: 0;
+    }
+}
+
+@mixin build-column-base($spacing: 0) {
+    @extend %baseColumn;
+    margin-top: $spacing;
+    margin-bottom: $spacing;
+    padding-left: $spacing;
+    padding-right: $spacing;
+}
+
+@mixin build-columns-internal($span, $total-columns: 6, $spacing: 0) {
+    @include build-column-base($spacing);
+    width: calculateColumnWidth($span, $total-columns);
+}
+
+@mixin build-padded-column($span, $total-columns: 6){
+    margin-left: calculateColumnWidth($span, $total-columns);
+}
+
+@mixin build-columns($span, $total-columns: 6, $selector: "grid", $spacing: 0) {
+    @if $span == $total-columns {
+        .#{$selector} {
+            @include build-columns-internal($span, $total-columns, $spacing);
+        }
+    }
+    @else {
+        .#{$selector}-#{$span}-#{$total-columns} {
+            @include build-columns-internal($span, $total-columns, $spacing);
+        }
+
+        .padded-#{$span}-#{$total-columns} {
+            @include build-padded-column($span, $total-columns);
+        }
+    }
+}
+
+@mixin build-columns($total, $selector, $spacing: 0) {
+    @for $i from 1 through ($total - 1) {
+        $selectors: buildGridSelectors($i, $total, $selector);
+        #{$selectors} {
+            @include build-columns-internal($i, $total, $spacing);
+        }
+        // $paddedSelectors: buildGridSelectors($i, $total, "padded");
+        // @warn $paddedSelectors;
+        // #{paddedSelectors} {
+        //     @include build-padded-column($i, $total);
+        // }
+    }
+}
+
+@mixin build-grid($spacing: 0) {
+    font-size: 0;
+
+    @include build-columns(6, "grid", $spacing);
+
+    // @include build-column(1,24,"grid",$spacing);
+    // @include build-column(2,24,"grid",$spacing);
+    // @include build-column(3,24,"grid",$spacing);
+    // @include build-column(4,24,"grid",$spacing);
+    // @include build-column(5,24,"grid",$spacing);
+    // @include build-column(6,24,"grid",$spacing);
+    // @include build-column(7,24,"grid",$spacing);
+    // @include build-column(8,24,"grid",$spacing);
+    // @include build-column(9,24,"grid",$spacing);
+    // @include build-column(10,24,"grid",$spacing);
+    // @include build-column(11,24,"grid",$spacing);
+    // @include build-column(12,24,"grid",$spacing);
+    // @include build-column(13,24,"grid",$spacing);
+    // @include build-column(14,24,"grid",$spacing);
+    // @include build-column(15,24,"grid",$spacing);
+    // @include build-column(16,24,"grid",$spacing);
+    // @include build-column(17,24,"grid",$spacing);
+    // @include build-column(18,24,"grid",$spacing);
+    // @include build-column(19,24,"grid",$spacing);
+    // @include build-column(20,24,"grid",$spacing);
+    // @include build-column(21,24,"grid",$spacing);
+    // @include build-column(22,24,"grid",$spacing);
+    // @include build-column(23,24,"grid",$spacing);
+    // @include build-column(1,12,"grid",$spacing);
+    // @include build-column(5,12,"grid",$spacing);
+    // @include build-column(7,12,"grid",$spacing);
+    // @include build-column(11,12,"grid",$spacing);
+    // @include build-column(1,10,"grid",$spacing);
+    // @include build-column(3,10,"grid",$spacing);
+    // @include build-column(4,10,"grid",$spacing);
+    // @include build-column(6,10,"grid",$spacing);
+    // @include build-column(7,10,"grid",$spacing);
+    // @include build-column(9,10,"grid",$spacing);
+    // @include build-column(1,8,"grid",$spacing);
+    // @include build-column(3,8,"grid",$spacing);
+    // @include build-column(5,8,"grid",$spacing);
+    // @include build-column(7,8,"grid",$spacing);
+    // @include build-column(1,6,"grid",$spacing);
+    // @include build-column(5,6,"grid",$spacing);
+    // @include build-column(1,4,"grid",$spacing);
+    // @include build-column(3,4,"grid",$spacing);
+    // @include build-column(1,3,"grid",$spacing);
+    // @include build-column(2,3,"grid",$spacing);
+    // @include build-column(1,2,"grid",$spacing);
+    // @include build-column(1,1,"grid-full",$spacing);
+
+    .grid-fluid {
+        @include build-column-base($spacing);
+    }
+}
+
+%grid-base {
+    overflow: visible;
+
+    &,
+    &::before,
+    &::after {
+        box-sizing: border-box !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: inherit;
+    }
+}
+
+.grid {
+    @extend %grid-base;
+    @include build-grid;
+}
+
+.grid-padded {
+    @extend %grid-base;
+    @include build-grid(8px);
+
+    > .padding {
+        margin: -(8px);
+    }
+}
+
+// @function getGridSelector($span, $total) {
+//   @return ".grid-#{$span}-#{$total}";
+// }
+
+// @function buildGridSelectors($span, $total) {
+//   $selectors: getGridSelector($span, $total);
+
+//   @if ($total) > 2 {
+//     $total: $total / 2;
+//     $span: $span / 2;
+
+//     $shouldRecurse: ($total == floor($total) and $total >= 1 and $span == floor($span) and $span >= 1);
+
+//     @warn "Floored: #{floor($span)} (#{$span}) == #{$span == floor($span)} -> #{$shouldRecurse}";
+
+//     @if $shouldRecurse {
+//       $selectors: $selectors + ", " + buildGridSelectors($span, $total);
+//     }
+//   }
+
+//   @return $selectors;
+// }
+
+// @mixin build-columns($total) {
+//   @for $i from 1 through ($total - 1) {
+//     $selectors: buildGridSelectors($i, $total);
+//     #{$selectors} {
+//       color: black;
+//     }
+//   }
+// }
+
+
+// @include build-columns(4);
